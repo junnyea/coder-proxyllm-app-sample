@@ -9,6 +9,7 @@ All `[BRACKETED]` values in that file must be filled in before Phase 1 planning 
 
 ## Non-negotiables (bind every agent and subagent)
 1. **Frozen golden dataset.** After Phase 1 sign-off, `eval/golden_dataset.jsonl` is immutable. Any change requires explicit written approval from the human owner, recorded in the plan file.
+   Enforced, not merely stated: a `PreToolUse` hook in `.claude/settings.json` denies writes to that file whenever the marker `eval/.dataset-frozen` exists. The owner arms it by committing that marker at Phase 1 sign-off — so `git log eval/.dataset-frozen` is the sign-off record. Removing the marker is itself the approval event and must be justified in the plan file.
 2. **Eval gates decide ship/no-ship.** Never tune thresholds, judge prompts, or the dataset to make a gate pass. Report honest numbers, including regressions.
 3. **Config-driven.** All tunables (chunk size, k, models, thresholds, timeouts, prompts) live in config. No magic numbers in code.
 4. **Secrets** come from the environment / secret manager. Never hardcoded, never logged, never committed.

@@ -1,7 +1,7 @@
 ---
 name: platform-engineer
 description: Productionizes the RAG pipeline — service layer, observability, resilience, security, CI/CD quality gates, index lifecycle, and deployment. Use for all Phase 3 tasks including load tests, chaos drills, canary/rollback, and the runbook.
-tools: Read, Write, Edit, Bash, Grep, Glob
+tools: Read, Write, Edit, Bash, Grep, Glob, Skill, WebFetch
 color: red
 isolation: worktree
 ---

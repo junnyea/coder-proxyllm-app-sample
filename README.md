@@ -13,9 +13,32 @@ Project-scoped subagents that let Claude Code delegate the RAG build: planning, 
     ├── rerank-engineer.md     # Phase 2: Cohere two-stage retrieval + fallback
     ├── platform-engineer.md   # Phase 3: service, observability, CI/CD, deploy
     └── code-reviewer.md       # read-only review gate before every merge
+└── settings.json              # PreToolUse hook enforcing the golden-dataset freeze
 CLAUDE.md                      # orchestration contract: non-negotiables, delegation map, phase loop
+docs/                          # rag-pipeline-phase-prompts.md — scope + Definitions of Done
 plans/                         # phase-planner writes phase-N-plan.md here
 ```
+
+## Skills the agents use
+The implementers and reviewer carry `Skill` (and `WebFetch`, except the reviewer), so they can reach references rather than working from memory:
+
+| Skill | Used by | Why |
+|---|---|---|
+| `claude-api` | pipeline-engineer | Correct model IDs and params, and **prompt caching** — the cost ceiling is hard to hit without it, and it's a Phase 1 config decision |
+| `security-review` | code-reviewer | Makes the "no secrets" and "corpus is untrusted input" non-negotiables a mechanical pass, not a judgment call |
+| `dataviz` | eval-engineer | Phase 1→2→3 delta tables render consistently, so readers track numbers instead of re-learning the format |
+
+## Enforced guarantees
+`CLAUDE.md` non-negotiable #1 freezes the golden dataset after Phase 1. That is enforced by a `PreToolUse` hook in `.claude/settings.json`, gated on a marker file so the dataset stays writable while it's being built:
+
+```
+# Phase 1 — no marker, eval-engineer authors the dataset freely
+# At sign-off — arm the guard, and record it in git:
+touch eval/.dataset-frozen && git add eval/.dataset-frozen && git commit -m "Freeze golden dataset (Phase 1 sign-off)"
+# Phase 2+ — writes to eval/golden_dataset.jsonl are denied with the approval requirement
+```
+
+`git log eval/.dataset-frozen` is therefore the sign-off record. Note that hooks only load at session start: after cloning this kit, open `/hooks` once or restart Claude Code before relying on the guard.
 
 ## Run with the orchestrator (even task splitting)
 ```

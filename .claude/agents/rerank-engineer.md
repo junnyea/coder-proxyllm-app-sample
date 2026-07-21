@@ -1,7 +1,7 @@
 ---
 name: rerank-engineer
 description: Integrates Cohere Rerank as a two-stage retrieval upgrade with fallback and flag gating. Use for all Phase 2 tasks — candidate over-retrieval, reranking, relevance thresholds, resilience, and the optional Cohere Embed experiment.
-tools: Read, Write, Edit, Bash, Grep, Glob
+tools: Read, Write, Edit, Bash, Grep, Glob, Skill, WebFetch
 color: orange
 isolation: worktree
 ---
