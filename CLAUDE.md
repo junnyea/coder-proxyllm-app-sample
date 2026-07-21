@@ -25,11 +25,16 @@ All `[BRACKETED]` values in that file must be filled in before Phase 1 planning 
 | Phase 3 service layer, observability, CI/CD, resilience, deployment | `platform-engineer` |
 | Review of any diff before merge | `code-reviewer` |
 
-## Phase execution loop (main session = orchestrator)
-1. Delegate to `phase-planner` → produces `plans/phase-<N>-plan.md`.
-2. Human approves the plan before implementation starts.
-3. For each task: delegate to the owning implementer → then `code-reviewer` (all Blocking findings must clear) → implementer runs its tests.
-4. Delegate to `eval-engineer` to run the phase gate and report deltas vs. baseline.
-5. Human signs off the Definition of Done. Only then does the next phase begin.
+## Phase execution loop (orchestrator-driven)
+Two equivalent ways to run this loop — the contract below binds both:
+- **Default session**: this main session acts as orchestrator per this file.
+- **Dedicated orchestrator**: launch `claude --agent rag-orchestrator` to run the orchestrator agent as the main session (its `initialPrompt` boots the loop automatically).
 
-Run independent tasks as **parallel subagents** where the plan allows; keep verbose output (test logs, search results, eval traces) inside subagent context and return only summaries to this session.
+1. Delegate to `phase-planner` → produces `plans/phase-<N>-plan.md` with size points (S=1, M=2, L=3) and dependency-ordered **waves**.
+2. Human approves the plan before implementation starts.
+3. **Even-split dispatch per wave**: assign the wave's tasks so each concurrent worker carries a near-equal point load (concurrency cap [3] unless the human changes it). One task per subagent invocation, full context in the dispatch prompt. Implementers run in isolated worktrees (`isolation: worktree`), so parallel edits cannot collide.
+4. As each worker returns: `code-reviewer` on its diff (all Blocking findings must clear) → merge in dependency order, smallest diff first. Failed or stalled tasks fold into the next wave and the split is rebalanced.
+5. Delegate to `eval-engineer` to run the phase gate and report deltas vs. baseline.
+6. Human signs off the Definition of Done. Only then does the next phase begin.
+
+Keep verbose output (test logs, search results, eval traces) inside subagent context and return only summaries to the orchestrating session.
